@@ -1,1 +1,7 @@
-# py_fotky
+- smaz AAE
+- otevri mov 
+    - kratsi nez 10s smaz
+    - delsi presun do VIDEO adreasre
+- otevri IMG_XXXX.HEIC
+    - pokud existuje IMG_EXXXX.HEIC , tak puvodni zatim presun do ORIG_HEIC, a E dej do VYBRANE_HEIC
+    - jinak puvodni dej do  VYBRANE_HEIC   
