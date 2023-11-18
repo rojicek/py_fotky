@@ -7,11 +7,27 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import re
 import shutil
-import PIL
-#from PIL.ExifTags import TAGS
 import datetime
 import exifread
+import PIL
+import pillow_heif
+# from PIL import Image
+# from pillow_heif import register_heif_opener
 
+pillow_heif.register_heif_opener()
+
+
+def reset_filestamp(heic_path):
+    image = PIL.Image.open(heic_path)
+
+    exif_data = image.getexif()
+    original_date_str = exif_data[306]
+
+    # Parse the string into a datetime object
+    datetime_obj = datetime.datetime.strptime(original_date_str, '%Y:%m:%d %H:%M:%S').timestamp()
+    os.utime(heic_path, times=(datetime_obj, datetime_obj))
+
+    return
 
 
 def set_file_timestamp_from_exif(heic_path):
@@ -35,6 +51,7 @@ def set_file_timestamp_from_exif(heic_path):
         else:
             print("No DateTimeOriginal tag found in EXIF data.")
 
+
 def delete_all_subfolders(folder_path):
     # Iterate over all subfolders in the specified directory
     for subfolder in os.listdir(folder_path):
@@ -53,19 +70,19 @@ def get_files_in_folder(folder_path):
     return files_list
 
 
-folder = r'c:\Users\jiri\Documents\multimedia\zpracovat\_nove-ala\test_folder'
+folder = r'c:\Users\jiri\Documents\multimedia\zpracovat\work_photos'
 
 delete_all_subfolders(folder)
 
 folder_keep = os.path.join(folder, 'keep')
-folder_check = os.path.join(folder, 'kontrola')
 folder_remove = os.path.join(folder, 'smazat')
+folder_edited_remove = os.path.join(folder, 'e-smazat')
 folder_jpg = os.path.join(folder, 'jpg')
 folder_mov = os.path.join(folder, 'mov')
 
 os.makedirs(folder_keep)
-os.makedirs(folder_check)
 os.makedirs(folder_remove)
+os.makedirs(folder_edited_remove)
 os.makedirs(folder_jpg)
 os.makedirs(folder_mov)
 
@@ -76,16 +93,20 @@ max_delka = 5  # sec
 all_files = get_files_in_folder(folder)
 
 # projdi vsechny heic a prepis casovou znacku z EXIF
+# i kdyz vetsinu potom smazu
 for file in all_files:
-
     file_path = os.path.join(folder, file)
     if file.lower().endswith('.heic'):
         if os.path.isfile(file_path):
-            set_file_timestamp_from_exif(file_path)
+            reset_filestamp(file_path)
 
 
+cnt = len(all_files)
 
 for file in all_files:
+    print(f'zbyva {cnt}')
+    cnt = cnt - 1
+
     file_path = os.path.join(folder, file)
     # .AAE suffix -> smazat (ani nedavam ke kontrole)
     if file.lower().endswith('.aae'):
@@ -106,26 +127,32 @@ for file in all_files:
             shutil.move(file_path, folder_remove)
         else:
             # ostatni mov do keep
-            print(file_path)
-            print('---------')
             shutil.move(file_path, folder_mov)
 
     # heic
-    pattern1 = re.compile('^img_[0-9]{4}.heic')
-    if pattern1.match(file.lower()) and False:
-        e_name = file[0:4] + 'E' + file[4:]
-        if os.path.isfile(os.path.join(folder, e_name)):
-            # existuji oba dva
-            one_pic_folder = os.path.join(folder, 'dir-'+file[:-5])
-            os.makedirs(one_pic_folder)
-            shutil.move(file_path,one_pic_folder)
-            shutil.move(os.path.join(folder, e_name), one_pic_folder)
+    # pattern1 = re.compile('^img_[0-9]{4}.heic')
+    # if pattern1.match(file.lower()) and False:
+    #     e_name = file[0:4] + 'E' + file[4:]
+    #     if os.path.isfile(os.path.join(folder, e_name)):
+    #         # existuji oba dva
+    #         one_pic_folder = os.path.join(folder, 'dir-'+file[:-5])
+    #         os.makedirs(one_pic_folder)
+    #         shutil.move(file_path,one_pic_folder)
+    #         shutil.move(os.path.join(folder, e_name), one_pic_folder)
 
-    pattern2 = re.compile('^img_e[0-9]{4}.heic')
-    if pattern2.match(file.lower()):
+    pattern_e = re.compile('^img_e[0-9]{4}.heic')
+    if pattern_e.match(file.lower()):
+        e_name = file
         h_name = file[0:4] + file[5:]
+
+        # keep e_name
+        shutil.move(os.path.join(folder, e_name), folder_keep)
+        # delete h_name
+        shutil.move(os.path.join(folder, h_name), folder_edited_remove)
+
         if os.path.isfile(os.path.join(folder, h_name)):
             # existuji oba dva
+
             one_pic_folder = os.path.join(folder, 'dir-'+file[:-5])
             os.makedirs(one_pic_folder)
             shutil.move(file_path,one_pic_folder)
