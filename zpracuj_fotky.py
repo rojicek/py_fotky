@@ -129,17 +129,6 @@ for file in all_files:
             # ostatni mov do keep
             shutil.move(file_path, folder_mov)
 
-    # heic
-    # pattern1 = re.compile('^img_[0-9]{4}.heic')
-    # if pattern1.match(file.lower()) and False:
-    #     e_name = file[0:4] + 'E' + file[4:]
-    #     if os.path.isfile(os.path.join(folder, e_name)):
-    #         # existuji oba dva
-    #         one_pic_folder = os.path.join(folder, 'dir-'+file[:-5])
-    #         os.makedirs(one_pic_folder)
-    #         shutil.move(file_path,one_pic_folder)
-    #         shutil.move(os.path.join(folder, e_name), one_pic_folder)
-
     pattern_e = re.compile('^img_e[0-9]{4}.heic')
     if pattern_e.match(file.lower()):
         e_name = file
@@ -150,13 +139,6 @@ for file in all_files:
         # delete h_name
         shutil.move(os.path.join(folder, h_name), folder_edited_remove)
 
-        if os.path.isfile(os.path.join(folder, h_name)):
-            # existuji oba dva
-
-            one_pic_folder = os.path.join(folder, 'dir-'+file[:-5])
-            os.makedirs(one_pic_folder)
-            shutil.move(file_path,one_pic_folder)
-            shutil.move(os.path.join(folder, h_name), one_pic_folder)
 
 # zkopiruj jen ty heic co zbudou
 for file in all_files:
@@ -167,7 +149,4 @@ for file in all_files:
         if os.path.isfile(file_path):
             shutil.move(file_path, os.path.join(folder_keep, file))
 
-
-
 print('konec')
-
